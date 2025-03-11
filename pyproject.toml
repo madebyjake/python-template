@@ -1,0 +1,103 @@
+[tool.poetry]
+name = "project"
+version = "0.0.0"
+description = "description"
+readme = "README.md"
+license = "MIT"
+authors = ["Jake Wells <email@example.com>"]
+keywords = ["python"]
+classifiers = [
+    # https://pypi.org/classifiers/
+    # "Development Status :: 1 - Planning",
+    # "Environment :: Console",
+    # "Intended Audience :: Information Technology",
+    # "License :: OSI Approved :: MIT License",
+    # "Natural Language :: English",
+    # "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    # "Topic :: Utilities",
+]
+
+[tool.poetry.urls]
+Documentation = ""
+Repository = ""
+Issues = ""
+
+[tool.poetry.scripts]
+project = "src.project.main:main"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+
+[tool.poetry.group.dev.dependencies]
+bandit = "^1.8.3"
+black = "^25.1.0"
+conventional-pre-commit = "^4.0.0"
+flake8 = "^7.1.2"
+flake8-bandit = "^4.1.1"
+flake8-black = "^0.3.6"
+flake8-bugbear = "^24.12.12"
+flake8-docstrings = "^1.7.0"
+flake8-isort = "^6.1.2"
+flake8-pyproject = "^1.2.3"
+isort = "^6.0.1"
+mypy = "^1.15.0"
+pre-commit = "^4.1.0"
+pytest = "^8.3.5"
+pytest-cov = "^6.0.0"
+
+[tool.black]
+line-length = 88
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+update_changelog_on_bump = true
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.flake8]
+extend-ignore = ["D202", "E203", "W503"]
+docstring-convention = "google"
+import-order-style = "google"
+application-import-names = ["src", "tests"]
+# Match Black line length
+max-line-length = 88
+# Security settings (flake8-bandit)
+bandit-confidence = "HIGH"
+bandit-severity = "LOW"
+select = [
+    "B",   # Bandit warnings
+    "BLK", # Black warnings
+    "D",   # Docstring warnings
+    "I",   # Import warnings
+    "S",   # Security warnings
+]
+ignore = []
+per-file-ignores = [
+    "tests/*:B101,S101,B404,S404", # Allow assert and subprocess in tests
+    "*/__init__.py:F401,D104",     # Allow unused imports in __init__ files and ignore docstring requirements
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
