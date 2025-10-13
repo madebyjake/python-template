@@ -29,7 +29,7 @@ dev = [
     # Versioning and changelog
     "commitizen>=3.13.0",
     # Security
-    "safety>=3.0.0",
+    "pip-audit>=2.6.0",
     "bandit>=1.7.0",
     # Development utilities
     "ipython>=8.30.0",
@@ -61,7 +61,7 @@ members = []
 
 # Ruff configuration
 [tool.ruff]
-target-version = "py310"
+target-version = "py314"
 line-length = 88
 indent-width = 2
 # Performance optimizations
@@ -157,7 +157,7 @@ force-single-line = false
 
 # MyPy configuration
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
