@@ -418,13 +418,35 @@ class FileUpdater:
     """Generate README content from template."""
     project_title = FileUpdater.format_project_title(config.name)
 
-    return f"""# {project_title}
+    # Build description section (only if description is provided)
+    description_section = ""
+    if config.description and config.description.strip():
+      description_section = f"\n{config.description}\n"
 
-{config.description}
+    return f"""# {project_title}{description_section}
+## Requirements
+
+- **Python**: {DEFAULT_PYTHON_VERSION} or higher
+- **uv**: For dependency management
+
+### Installing uv
+
+Install uv with the official installer:
+
+```bash
+# macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Or install via pip:
+```bash
+pip install uv
+```
 
 ## Development
-
-### Development Commands
 
 Use `make help` to see all available commands, or run directly:
 
@@ -466,7 +488,7 @@ Use `make help` to see all available commands, or run directly:
 
 ### CLI Usage
 
-The template includes a CLI built with Typer:
+The project includes a CLI built with Typer:
 
 ```bash
 # Show project information
@@ -513,9 +535,9 @@ The project uses [Commitizen](https://commitizen-tools.github.io/commitizen/) fo
 ### Versioning Commands
 - `make version` - Show current version
 - `make bump` - Bump version based on conventional commits
-- `make bump-patch` - Patch version bump (0.0.0 -> 0.0.1)
-- `make bump-minor` - Minor version bump (0.0.0 -> 0.1.0)
-- `make bump-major` - Major version bump (0.0.0 -> 1.0.0)
+- `make bump-patch` - Patch version bump (0.0.0 → 0.0.1)
+- `make bump-minor` - Minor version bump (0.0.0 → 0.1.0)
+- `make bump-major` - Major version bump (0.0.0 → 1.0.0)
 
 ### Commit Format
 ```
