@@ -157,32 +157,6 @@ Use `make help` to see all available commands, or run directly:
 - **Benchmark:** `make benchmark` - Benchmark linting and formatting performance
 - **Profile:** `make profile` - Profile dependency resolution
 
-### Project Structure
-```
-├── src/                        # Source code
-│   └── cli/                    # CLI package
-│       ├── __init__.py         # Package initialization with version
-│       └── main.py             # CLI module with Typer
-├── tests/                      # Test files
-│   ├── __init__.py
-│   └── test_cli.py             # CLI tests
-├── docs/                       # Documentation
-│   ├── index.md
-│   └── api.md
-├── init_project.py             # Project initialization script
-├── .vscode/                    # VSCode configuration
-│   ├── settings.json           # Editor settings
-│   └── extensions.json         # Recommended extensions
-├── pyproject.toml              # Project configuration
-├── .pre-commit-config.yaml     # Pre-commit hooks
-├── .editorconfig               # Editor configuration
-├── .python-version             # Python version for pyenv
-├── mkdocs.yml                  # Documentation configuration
-├── Makefile                    # Development commands
-├── CHANGELOG.md                # Version history
-└── README.md
-```
-
 ### CLI Usage
 
 The template includes a CLI built with Typer:
