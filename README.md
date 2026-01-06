@@ -95,7 +95,7 @@ A Python project template with modern tooling, automated testing, security scann
 
 ## Requirements
 
-- **Python**: 3.10, 3.11, 3.12, 3.13, or 3.14
+- **Python**: 3.13
 - **uv**: For dependency management
 
 ### Installing uv
@@ -224,7 +224,7 @@ The project includes security scanning tools:
 - **Python**: Uses Ruff for linting and formatting
 
 ### pyenv
-- **Python Version**: Specified in `.python-version` (3.14)
+- **Python Version**: Specified in `.python-version` (3.13)
 - **Automatic**: pyenv will automatically use the correct Python version
 
 ## Configuration

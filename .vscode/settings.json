@@ -2,7 +2,9 @@
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
-  "editor.rulers": [88],
+  "editor.rulers": [
+    88
+  ],
   "editor.trimAutoWhitespace": true,
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
@@ -11,53 +13,79 @@
   "python.defaultInterpreterPath": "./venv/bin/python",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
   },
+  "ruff.enable": true,
+  "ruff.organizeImports": true,
+  "ruff.fixAll": true,
+  "ruff.lint.enable": true,
+  "flake8.enabled": false,
+  "pylint.enabled": false,
   "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [88]
+    "editor.rulers": [
+      88
+    ]
   },
   "[yaml]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [120]
+    "editor.rulers": [
+      120
+    ]
   },
   "[json]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [100]
+    "editor.rulers": [
+      100
+    ]
   },
   "[javascript]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [100]
+    "editor.rulers": [
+      100
+    ]
   },
   "[typescript]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [100]
+    "editor.rulers": [
+      100
+    ]
   },
   "[markdown]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [80],
+    "editor.rulers": [
+      80
+    ],
     "files.trimTrailingWhitespace": false
   },
   "[toml]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [120]
+    "editor.rulers": [
+      120
+    ]
   },
   "[ini]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [120]
+    "editor.rulers": [
+      120
+    ]
   },
   "[cfg]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [120]
+    "editor.rulers": [
+      120
+    ]
   },
   "[makefile]": {
     "editor.tabSize": 4,
@@ -67,11 +95,15 @@
   "[shell]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [100]
+    "editor.rulers": [
+      100
+    ]
   },
   "[bash]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.rulers": [100]
+    "editor.rulers": [
+      100
+    ]
   }
 }

@@ -19,13 +19,11 @@ TEMPLATE_DESCRIPTION = "A modern Python project template"
 DEFAULT_DESCRIPTION = "A modern Python project"
 DEFAULT_COMMIT_MSG = "chore: initialize repository"
 
-# Python version options
-PYTHON_VERSIONS = {
-  "1": "3.10",
-  "2": "3.11",
-  "3": "3.12",
-  "4": "3.13",
-}
+# Python version configuration
+# This is the single source of truth for the default Python version.
+# To bump the version, update this constant and the template's pyproject.toml
+# (requires-python, [tool.ruff] target-version, and [tool.mypy] python_version)
+DEFAULT_PYTHON_VERSION = "3.13"
 
 # Required files for template validation
 REQUIRED_FILES = [
@@ -207,18 +205,7 @@ def get_user_input() -> ProjectConfig:
   )
   install_dependencies = install_choice == 1
 
-  # Prompt for Python version selection
-  print()
-  print("🐍 Python version selection:")
-  for key, version in PYTHON_VERSIONS.items():
-    print(f"{key}. Python {version}")
-
-  python_choice = get_choice_input(
-    "Choose Python version (1-4):",
-    [f"Python {version}" for version in PYTHON_VERSIONS.values()],
-    "Please enter a number between 1 and 4.",
-  )
-  python_version = list(PYTHON_VERSIONS.values())[python_choice - 1]
+  python_version = DEFAULT_PYTHON_VERSION
 
   return ProjectConfig(
     name=project_name,
@@ -259,6 +246,11 @@ def confirm_changes(config: ProjectConfig) -> bool:
 
 class FileUpdater:
   """Manages file updates with consistent patterns."""
+
+  @staticmethod
+  def format_project_title(project_name: str) -> str:
+    """Format project name as a title."""
+    return project_name.replace("-", " ").title()
 
   @staticmethod
   def update_file(file_path: str, replacements: list[tuple[str, str]]) -> None:
@@ -305,8 +297,9 @@ class FileUpdater:
   @staticmethod
   def update_readme(config: ProjectConfig) -> None:
     """Update README.md with new project name."""
+    project_title = FileUpdater.format_project_title(config.name)
     replacements = [
-      (r"# Python Project Template", f"# {config.name.replace('-', ' ').title()}"),
+      (r"# Python Project Template", f"# {project_title}"),
       (r"poetry run python-template", f"uv run {config.name}"),
       (r"make run\s+# Default package name", f"make run  # Run {config.name}"),
     ]
@@ -338,10 +331,11 @@ class FileUpdater:
   @staticmethod
   def update_mkdocs_config(config: ProjectConfig) -> None:
     """Update mkdocs.yml with project details."""
+    project_title = FileUpdater.format_project_title(config.name)
     replacements = [
       (
         r"site_name: Python Project Template",
-        f"site_name: {config.name.replace('-', ' ').title()}",
+        f"site_name: {project_title}",
       ),
       (
         r"site_description: A modern Python project template with best practices",
@@ -384,28 +378,184 @@ class FileUpdater:
           print(f"🗑️  Removed file: {file_path}")
 
   @staticmethod
+  def _python_version_to_ruff_format(version: str) -> str:
+    """Convert Python version (e.g., '3.13') to Ruff format (e.g., 'py313')."""
+    # Remove dots and add 'py' prefix
+    return f"py{version.replace('.', '')}"
+
+  @staticmethod
   def update_python_version(config: ProjectConfig) -> None:
     """Update Python version in .python-version and pyproject.toml."""
     # Update .python-version file
     Path(".python-version").write_text(f"{config.python_version}\n")
     print(f"✅ Updated .python-version to Python {config.python_version}")
 
-    # Update pyproject.toml Python version constraint
+    # Convert version for Ruff format (e.g., "3.13" -> "py313")
+    ruff_version = FileUpdater._python_version_to_ruff_format(config.python_version)
+
+    # Update pyproject.toml: requires-python, ruff target-version, and mypy python_version
     replacements = [
+      # Update requires-python
       (
-        r'python = "\^3\.10,<4\.0"',
-        f'python = "^{config.python_version},<4.0"',
+        r'requires-python = ">=\d+\.\d+,<4\.0"',
+        f'requires-python = ">={config.python_version},<4.0"',
+      ),
+      # Update Ruff target-version
+      (
+        r'target-version = "py\d+"',
+        f'target-version = "{ruff_version}"',
+      ),
+      # Update MyPy python_version
+      (
+        r'python_version = "\d+\.\d+"',
+        f'python_version = "{config.python_version}"',
       ),
     ]
     FileUpdater.update_file("pyproject.toml", replacements)
 
   @staticmethod
-  def cleanup_template_files() -> None:
-    """Remove template-specific files."""
+  def _generate_readme_content(config: ProjectConfig) -> str:
+    """Generate README content from template."""
+    project_title = FileUpdater.format_project_title(config.name)
+
+    return f"""# {project_title}
+
+{config.description}
+
+## Development
+
+### Development Commands
+
+Use `make help` to see all available commands, or run directly:
+
+**Setup & Dependencies:**
+- **Setup:** `make setup` - Complete development setup (install deps + pre-commit)
+- **Install:** `make install` - Install main dependencies
+- **Install dev:** `make install-dev` - Install all dependencies including dev
+- **Add package:** `make add PACKAGE=name` - Add a new dependency
+- **Remove package:** `make remove PACKAGE=name` - Remove a dependency
+- **Dependency tree:** `make tree` - Show dependency tree
+
+**Code Quality:**
+- **All checks:** `make check` - Run linting, type checking, and tests
+- **Fast checks:** `make check-fast` - Run fast checks (lint only)
+- **Full checks:** `make check-full` - Run all checks including coverage
+- **Lint:** `make lint` - Run Ruff linter
+- **Format:** `make format` - Format code with Ruff
+- **Format check:** `make format-check` - Check if code is formatted correctly
+- **Format fix:** `make format-fix` - Format code and fix issues automatically
+- **Type check:** `make type-check` - Run mypy type checking
+
+**Testing & Building:**
+- **Test:** `make test` - Run tests
+- **Test with coverage:** `make test-cov` - Run tests with coverage report
+- **Build:** `make build` - Build package for distribution
+- **Publish:** `make publish` - Publish to PyPI
+
+**Application:**
+- **Run:** `make run` - Run the application
+- **Debug:** `make debug` - Run in debug mode
+
+**Documentation:**
+- **Build docs:** `make docs` - Build documentation
+- **Serve docs:** `make serve-docs` - Serve documentation locally
+
+**Performance:**
+- **Benchmark:** `make benchmark` - Benchmark linting and formatting performance
+- **Profile:** `make profile` - Profile dependency resolution
+
+### CLI Usage
+
+The template includes a CLI built with Typer:
+
+```bash
+# Show project information
+uv run {config.name}
+
+# Show help
+uv run {config.name} --help
+
+# Run application (multiple ways)
+make run                           # Default package name
+make run ARGS="--help"             # With arguments
+make debug                         # Debug mode
+```
+
+### Makefile
+
+The Makefile provides commands for installing dependencies, running tests, linting, formatting, building, publishing, and managing versioning.
+
+- **Configurable**: Update `MAIN_MODULE` and `MAIN_FUNCTION` in Makefile for different entry points
+- **Flexible**: Supports running any package with `make run <package-name>`
+- **Consistent**: Same commands work regardless of application type
+- **Extensible**: Easy to add new targets for different project needs
+
+### Security
+
+The project includes security scanning tools:
+
+- **Safety:** `uv run safety scan` - Check for known vulnerabilities
+- **Bandit:** `uv run bandit -r src/` - Security linting for Python code
+
+## Configuration
+
+All tools are configured in `pyproject.toml`. See the file for specific settings.
+
+## Versioning and Changelog
+
+The project uses [Commitizen](https://commitizen-tools.github.io/commitizen/) for automated versioning and changelog generation.
+
+- **Versioning**: Follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH)
+- **Changelog**: Generated from commit messages
+- **Commits**: Use [Conventional Commits](https://www.conventionalcommits.org/) format
+- **Releases**: Independent of CI/CD platforms
+
+### Versioning Commands
+- `make version` - Show current version
+- `make bump` - Bump version based on conventional commits
+- `make bump-patch` - Patch version bump (0.0.0 -> 0.0.1)
+- `make bump-minor` - Minor version bump (0.0.0 -> 0.1.0)
+- `make bump-major` - Major version bump (0.0.0 -> 1.0.0)
+
+### Commit Format
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+"""
+
+  @staticmethod
+  def create_new_readme(config: ProjectConfig) -> None:
+    """Create a new README with project-specific content."""
+    readme_content = FileUpdater._generate_readme_content(config)
+
+    try:
+      Path("README.md").write_text(readme_content, encoding="utf-8")
+      print("✅ Created new README.md")
+    except OSError as e:
+      print(f"❌ Failed to create README.md: {e}")
+      raise
+
+  @staticmethod
+  def cleanup_template_files(config: ProjectConfig) -> None:
+    """Remove template-specific files and create new README."""
+    # Create new README first
+    FileUpdater.create_new_readme(config)
+
+    # Then remove template files
     for file_path in TEMPLATE_CLEANUP_FILES:
-      if Path(file_path).exists():
-        Path(file_path).unlink()
-        print(f"🗑️  Removed template file: {file_path}")
+      try:
+        if Path(file_path).exists():
+          Path(file_path).unlink()
+          print(f"🗑️  Removed template file: {file_path}")
+      except OSError as e:
+        print(f"⚠️  Warning: Failed to remove {file_path}: {e}")
+        # Continue with other files even if one fails
 
 
 def install_dependencies() -> None:
@@ -519,7 +669,6 @@ def main() -> None:
     # Update configuration files
     FileUpdater.update_pyproject_toml(config)
     FileUpdater.update_makefile(config)
-    FileUpdater.update_readme(config)
     FileUpdater.update_cli_script(config)
     FileUpdater.update_cli_module(config)
     FileUpdater.update_python_version(config)
@@ -530,9 +679,12 @@ def main() -> None:
     else:
       FileUpdater.remove_mkdocs_files()
 
-    # Remove template files if requested
+    # Remove template files if requested (creates new README)
     if config.cleanup_template:
-      FileUpdater.cleanup_template_files()
+      FileUpdater.cleanup_template_files(config)
+    else:
+      # Only update README if we're not creating a new one
+      FileUpdater.update_readme(config)
 
     # Install dependencies if requested
     dependencies_installed = False
