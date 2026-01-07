@@ -26,9 +26,17 @@ sync: ## Sync dependencies with lockfile
 	uv sync
 
 add: ## Add a dependency (usage: make add PACKAGE=package-name)
+	@if [ -z "$(PACKAGE)" ]; then \
+		echo "Error: PACKAGE is required. Usage: make add PACKAGE=package-name"; \
+		exit 1; \
+	fi
 	uv add $(PACKAGE)
 
 remove: ## Remove a dependency (usage: make remove PACKAGE=package-name)
+	@if [ -z "$(PACKAGE)" ]; then \
+		echo "Error: PACKAGE is required. Usage: make remove PACKAGE=package-name"; \
+		exit 1; \
+	fi
 	uv remove $(PACKAGE)
 
 tree: ## Show dependency tree
@@ -36,8 +44,8 @@ tree: ## Show dependency tree
 
 setup: ## Complete development setup
 	@echo "Setting up development environment..."
-	uv sync --extra dev
-	uv run pre-commit install
+	@uv sync --extra dev || (echo "Error: Failed to install dependencies" && exit 1)
+	@uv run pre-commit install || (echo "Error: Failed to install pre-commit hooks" && exit 1)
 	@echo "Development environment ready!"
 
 test: ## Run tests
@@ -48,16 +56,16 @@ test-cov: ## Run tests with coverage
 
 run: ## Run the application (usage: make run [package] [ARGS="--help"])
 	@if [ -n "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
-		uv run python -c "from $(filter-out $@,$(MAKECMDGOALS)).$(MAIN_MODULE) import $(MAIN_FUNCTION); $(MAIN_FUNCTION)()" $(ARGS); \
+		uv run python -c "from $(filter-out $@,$(MAKECMDGOALS)).$(MAIN_MODULE) import $(MAIN_FUNCTION); $(MAIN_FUNCTION)()" $(ARGS) || (echo "Error: Failed to run application" && exit 1); \
 	else \
-		uv run $(SCRIPT_NAME) $(ARGS); \
+		uv run $(SCRIPT_NAME) $(ARGS) || (echo "Error: Failed to run $(SCRIPT_NAME)" && exit 1); \
 	fi
 
 debug: ## Run in debug mode (usage: make debug [package] [ARGS="--help"])
 	@if [ -n "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
-		uv run python -c "from $(filter-out $@,$(MAKECMDGOALS)).$(MAIN_MODULE) import $(MAIN_FUNCTION); $(MAIN_FUNCTION)()" $(ARGS); \
+		uv run python -c "from $(filter-out $@,$(MAKECMDGOALS)).$(MAIN_MODULE) import $(MAIN_FUNCTION); $(MAIN_FUNCTION)()" $(ARGS) || (echo "Error: Failed to run application in debug mode" && exit 1); \
 	else \
-		uv run python -c "from src.cli.$(MAIN_MODULE) import $(MAIN_FUNCTION); $(MAIN_FUNCTION)()" $(ARGS); \
+		uv run python -c "from src.cli.$(MAIN_MODULE) import $(MAIN_FUNCTION); $(MAIN_FUNCTION)()" $(ARGS) || (echo "Error: Failed to run $(SCRIPT_NAME) in debug mode" && exit 1); \
 	fi
 
 %:
@@ -110,44 +118,83 @@ clean: ## Clean up build artifacts
 	find . -type f -name "*.pyc" -delete
 
 build: clean ## Build the package
-	uv build
+	@if [ ! -f pyproject.toml ]; then \
+		echo "Error: pyproject.toml not found" && exit 1; \
+	fi
+	uv build || (echo "Error: Failed to build package" && exit 1)
 
 publish: ## Publish to PyPI
-	uv publish
+	@if [ ! -d dist ]; then \
+		echo "Error: No dist directory found. Run 'make build' first." && exit 1; \
+	fi
+	uv publish || (echo "Error: Failed to publish to PyPI" && exit 1)
 
 docs: ## Build documentation
-	uv run mkdocs build
+	@if [ ! -f mkdocs.yml ]; then \
+		echo "Error: mkdocs.yml not found. MkDocs may have been removed." && exit 1; \
+	fi
+	uv run mkdocs build || (echo "Error: Failed to build documentation" && exit 1)
 
 serve-docs: ## Serve documentation locally
-	uv run mkdocs serve
+	@if [ ! -f mkdocs.yml ]; then \
+		echo "Error: mkdocs.yml not found. MkDocs may have been removed." && exit 1; \
+	fi
+	uv run mkdocs serve || (echo "Error: Failed to serve documentation" && exit 1)
 
 version: ## Show current version
-	@$(GET_VERSION)
+	@if [ ! -f pyproject.toml ]; then \
+		echo "Error: pyproject.toml not found" && exit 1; \
+	fi
+	@$(GET_VERSION) || (echo "Error: Failed to read version from pyproject.toml" && exit 1)
 
 bump: ## Bump version based on conventional commits
-	@uv run cz bump --changelog
-	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
-	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
+	@if [ ! -d .git ]; then \
+		echo "Error: Not a git repository. Initialize git first." && exit 1; \
+	fi
+	@if ! command -v git >/dev/null 2>&1; then \
+		echo "Error: git is not installed" && exit 1; \
+	fi
+	@uv run cz bump --changelog || (echo "Error: Failed to bump version" && exit 1)
+	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md || (echo "Error: Failed to stage files" && exit 1)
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))" || (echo "Error: Failed to commit" && exit 1)
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/') || (echo "Warning: Failed to create tag (may already exist)" && true)
 	@echo "Version bumped and committed. Don't forget to push with: git push --follow-tags"
 
 bump-patch: ## Bump patch version (0.0.0 -> 0.0.1)
-	@uv run cz bump --increment PATCH --changelog
-	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
-	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
+	@if [ ! -d .git ]; then \
+		echo "Error: Not a git repository. Initialize git first." && exit 1; \
+	fi
+	@if ! command -v git >/dev/null 2>&1; then \
+		echo "Error: git is not installed" && exit 1; \
+	fi
+	@uv run cz bump --increment PATCH --changelog || (echo "Error: Failed to bump version" && exit 1)
+	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md || (echo "Error: Failed to stage files" && exit 1)
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))" || (echo "Error: Failed to commit" && exit 1)
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/') || (echo "Warning: Failed to create tag (may already exist)" && true)
 	@echo "Patch version bumped and committed. Don't forget to push with: git push --follow-tags"
 
 bump-minor: ## Bump minor version (0.0.0 -> 0.1.0)
-	@uv run cz bump --increment MINOR --changelog
-	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
-	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
+	@if [ ! -d .git ]; then \
+		echo "Error: Not a git repository. Initialize git first." && exit 1; \
+	fi
+	@if ! command -v git >/dev/null 2>&1; then \
+		echo "Error: git is not installed" && exit 1; \
+	fi
+	@uv run cz bump --increment MINOR --changelog || (echo "Error: Failed to bump version" && exit 1)
+	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md || (echo "Error: Failed to stage files" && exit 1)
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))" || (echo "Error: Failed to commit" && exit 1)
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/') || (echo "Warning: Failed to create tag (may already exist)" && true)
 	@echo "Minor version bumped and committed. Don't forget to push with: git push --follow-tags"
 
 bump-major: ## Bump major version (0.0.0 -> 1.0.0)
-	@uv run cz bump --increment MAJOR --changelog
-	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
-	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
+	@if [ ! -d .git ]; then \
+		echo "Error: Not a git repository. Initialize git first." && exit 1; \
+	fi
+	@if ! command -v git >/dev/null 2>&1; then \
+		echo "Error: git is not installed" && exit 1; \
+	fi
+	@uv run cz bump --increment MAJOR --changelog || (echo "Error: Failed to bump version" && exit 1)
+	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md || (echo "Error: Failed to stage files" && exit 1)
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))" || (echo "Error: Failed to commit" && exit 1)
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/') || (echo "Warning: Failed to create tag (may already exist)" && true)
 	@echo "Major version bumped and committed. Don't forget to push with: git push --follow-tags"
