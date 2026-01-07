@@ -338,8 +338,8 @@ class FileUpdater:
         f"site_name: {project_title}",
       ),
       (
-        r"site_description: A modern Python project template with best practices",
-        f"site_description: {config.description} with best practices",
+        r"site_description: A modern Python project template",
+        f"site_description: {config.description}",
       ),
       (
         r"site_url: https://your-username\.github\.io/python-template",
