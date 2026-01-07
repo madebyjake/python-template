@@ -426,7 +426,7 @@ class FileUpdater:
     return f"""# {project_title}{description_section}
 ## Requirements
 
-- **Python**: {DEFAULT_PYTHON_VERSION} or higher
+- **Python**: {config.python_version} or higher
 - **uv**: For dependency management
 
 ### Installing uv
