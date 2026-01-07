@@ -4,6 +4,9 @@ SCRIPT_NAME ?= python-template
 MAIN_MODULE ?= main
 MAIN_FUNCTION ?= main
 
+# Version extraction command (uses built-in tomllib for Python 3.11+)
+GET_VERSION = uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+
 .PHONY: help install install-dev test test-cov run debug run-pkg debug-pkg lint format type-check clean build publish docs serve-docs version bump bump-major bump-minor bump-patch lock sync add remove tree
 
 help: ## Show this help message
@@ -119,32 +122,32 @@ serve-docs: ## Serve documentation locally
 	uv run mkdocs serve
 
 version: ## Show current version
-	@uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])"
+	@$(GET_VERSION)
 
 bump: ## Bump version based on conventional commits
 	@uv run cz bump --changelog
 	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")"
-	@git tag $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])" | sed 's/^/v/')
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
 	@echo "Version bumped and committed. Don't forget to push with: git push --follow-tags"
 
 bump-patch: ## Bump patch version (0.0.0 -> 0.0.1)
 	@uv run cz bump --increment PATCH --changelog
 	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")"
-	@git tag $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])" | sed 's/^/v/')
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
 	@echo "Patch version bumped and committed. Don't forget to push with: git push --follow-tags"
 
 bump-minor: ## Bump minor version (0.0.0 -> 0.1.0)
 	@uv run cz bump --increment MINOR --changelog
 	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")"
-	@git tag $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])" | sed 's/^/v/')
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
 	@echo "Minor version bumped and committed. Don't forget to push with: git push --follow-tags"
 
 bump-major: ## Bump major version (0.0.0 -> 1.0.0)
 	@uv run cz bump --increment MAJOR --changelog
 	@git add pyproject.toml src/cli/__init__.py CHANGELOG.md
-	@git commit -m "chore: bump version to $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")"
-	@git tag $(shell uv run python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])" | sed 's/^/v/')
+	@git commit -m "chore: bump version to $(shell $(GET_VERSION))"
+	@git tag $(shell $(GET_VERSION) | sed 's/^/v/')
 	@echo "Major version bumped and committed. Don't forget to push with: git push --follow-tags"
