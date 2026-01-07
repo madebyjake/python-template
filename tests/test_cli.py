@@ -2,8 +2,17 @@
 
 from contextlib import redirect_stdout
 from io import StringIO
+from unittest.mock import MagicMock
 
-from src.cli.main import PROJECT_DESCRIPTION, PROJECT_NAME, info, main, version
+from src.cli.main import (
+  PROJECT_DESCRIPTION,
+  PROJECT_NAME,
+  app,
+  cli,
+  info,
+  main,
+  version,
+)
 
 
 class TestCLI:
@@ -13,13 +22,16 @@ class TestCLI:
     """Test main function called directly."""
     output = StringIO()
     with redirect_stdout(output):
-      main()
+      # Create a mock context for the callback
+      ctx = MagicMock()
+      ctx.invoked_subcommand = None
+      main(ctx, version_flag=False)
 
     result = output.getvalue()
     assert PROJECT_NAME in result
     assert PROJECT_DESCRIPTION in result
     assert "Version: 0.0.0" in result
-    assert "Available commands:" in result
+    assert "Use --help" in result
 
   def test_version_function_direct(self) -> None:
     """Test version function called directly."""
@@ -42,9 +54,10 @@ class TestCLI:
 
   def test_cli_imports(self) -> None:
     """Test that CLI functions can be imported."""
-    assert callable(main)
+    assert callable(cli)
     assert callable(version)
     assert callable(info)
+    assert app is not None
 
   def test_version_output_format(self) -> None:
     """Test version output format."""

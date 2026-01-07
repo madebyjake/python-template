@@ -41,7 +41,7 @@ dev = [
 ]
 
 [project.scripts]
-python-template = "src.cli.main:main"
+python-template = "src.cli.main:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

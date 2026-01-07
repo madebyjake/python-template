@@ -310,8 +310,8 @@ class FileUpdater:
     """Update the CLI script name in pyproject.toml."""
     replacements = [
       (
-        r'python-template = "src\.cli\.main:main"',
-        f'{config.name} = "src.cli.main:main"',
+        r'python-template = "src\.cli\.main:cli"',
+        f'{config.name} = "src.cli.main:cli"',
       ),
     ]
     FileUpdater.update_file("pyproject.toml", replacements)
