@@ -41,7 +41,7 @@ dev = [
 ]
 
 [project.scripts]
-python-template = "src.cli.main:main"
+python-template = "src.cli.main:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
@@ -194,6 +194,7 @@ module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 check_untyped_defs = false
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "scripts.*"
