@@ -12,21 +12,22 @@ import re
 import shutil
 import subprocess
 import sys
+from typing import Final
 
 # Constants
-TEMPLATE_NAME = "python-template"
-TEMPLATE_DESCRIPTION = "A modern Python project template"
-DEFAULT_DESCRIPTION = "A modern Python project"
-DEFAULT_COMMIT_MSG = "chore: initialize repository"
+TEMPLATE_NAME: Final[str] = "python-template"
+TEMPLATE_DESCRIPTION: Final[str] = "A modern Python project template"
+DEFAULT_DESCRIPTION: Final[str] = "A modern Python project"
+DEFAULT_COMMIT_MSG: Final[str] = "chore: initialize repository"
 
 # Python version configuration
 # This is the single source of truth for the default Python version.
 # To bump the version, update this constant and the template's pyproject.toml
 # (requires-python, [tool.ruff] target-version, and [tool.mypy] python_version)
-DEFAULT_PYTHON_VERSION = "3.13"
+DEFAULT_PYTHON_VERSION: Final[str] = "3.13"
 
 # Required files for template validation
-REQUIRED_FILES = [
+REQUIRED_FILES: Final[list[str]] = [
   "pyproject.toml",
   "src/cli/main.py",
   "Makefile",
@@ -34,14 +35,14 @@ REQUIRED_FILES = [
 ]
 
 # Template files to remove during cleanup
-TEMPLATE_CLEANUP_FILES = [
+TEMPLATE_CLEANUP_FILES: Final[list[str]] = [
   "init_project.py",
   "CHANGELOG.md",
   "LICENSE",
 ]
 
 # MkDocs files to remove if not keeping
-MKDOCS_FILES = [
+MKDOCS_FILES: Final[list[str]] = [
   "mkdocs.yml",
   "docs/",
 ]
@@ -76,11 +77,21 @@ def validate_template() -> bool:
   if missing_files:
     print("❌ Error: This doesn't appear to be a python-template repository.")
     print(f"Missing required files: {', '.join(missing_files)}")
+    print()
+    print("💡 Make sure you're running this script from the root of the")
+    print("   python-template repository. If you cloned it, ensure all files")
+    print("   were downloaded correctly.")
     return False
 
   # Verify git repository exists
   if not Path(".git").exists():
-    print("❌ Error: Not a git repository. Please clone the template first.")
+    print("❌ Error: Not a git repository.")
+    print()
+    print("💡 This script requires a git repository to work.")
+    print("   Please clone the template first:")
+    print("   git clone <repository-url> <project-name>")
+    print("   cd <project-name>")
+    print("   python init_project.py")
     return False
 
   return True
@@ -123,13 +134,18 @@ def get_user_input() -> ProjectConfig:
     ).strip()
 
     if not project_name:
-      print("❌ Project name cannot be empty. Please try again.")
+      print("❌ Error: Project name cannot be empty.")
+      print("💡 Please enter a valid project name (e.g., 'my-awesome-project').")
       continue
 
     if not validate_project_name(project_name):
-      print(
-        "❌ Project name can only contain letters, numbers, hyphens, and underscores."
-      )
+      print("❌ Error: Invalid project name format.")
+      print("💡 Project names can only contain:")
+      print("   - Letters (a-z, A-Z)")
+      print("   - Numbers (0-9)")
+      print("   - Hyphens (-)")
+      print("   - Underscores (_)")
+      print(f"   Example: 'my-project' or 'my_project' (not '{project_name}')")
       continue
 
     break
@@ -152,9 +168,11 @@ def get_user_input() -> ProjectConfig:
       break
 
     if not validate_author_email(author):
-      print(
-        "❌ Invalid email format. Please use 'Name <email@domain.com>' or press Enter to skip."
-      )
+      print("❌ Error: Invalid email format.")
+      print("💡 Please use one of these formats:")
+      print("   - 'Your Name <your.email@example.com>'")
+      print("   - Or press Enter to skip")
+      print(f"   You entered: '{author}'")
       continue
 
     break
@@ -560,7 +578,9 @@ Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
       Path("README.md").write_text(readme_content, encoding="utf-8")
       print("✅ Created new README.md")
     except OSError as e:
-      print(f"❌ Failed to create README.md: {e}")
+      print("❌ Error: Failed to create README.md")
+      print(f"   Details: {e}")
+      print("💡 Check that you have write permissions in the current directory.")
       raise
 
   @staticmethod
@@ -576,7 +596,9 @@ Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
           Path(file_path).unlink()
           print(f"🗑️  Removed template file: {file_path}")
       except OSError as e:
-        print(f"⚠️  Warning: Failed to remove {file_path}: {e}")
+        print(f"⚠️  Warning: Failed to remove {file_path}")
+        print(f"   Details: {e}")
+        print("💡 You may need to remove this file manually later.")
         # Continue with other files even if one fails
 
 
@@ -589,11 +611,28 @@ def install_dependencies() -> None:
     subprocess.run(["uv", "sync", "--extra", "dev"], check=True)
     print("✅ Dependencies installed successfully")
   except subprocess.CalledProcessError as e:
-    print(f"❌ Failed to install dependencies: {e}")
-    print("💡 You can run 'uv sync' manually later.")
+    print("❌ Error: Failed to install dependencies")
+    print(f"   Exit code: {e.returncode}")
+    if e.stderr:
+      print(
+        f"   Error output: {e.stderr.decode() if isinstance(e.stderr, bytes) else e.stderr}"
+      )
+    print()
+    print("💡 Troubleshooting steps:")
+    print("   1. Check your internet connection")
+    print("   2. Verify uv is up to date: uv --version")
+    print("   3. Try running manually: uv sync --extra dev")
+    print("   4. Check for conflicting packages in pyproject.toml")
   except FileNotFoundError:
-    print("❌ uv not found. Please install uv first.")
-    print("💡 Visit: https://docs.astral.sh/uv/getting-started/installation/")
+    print("❌ Error: 'uv' command not found")
+    print()
+    print("💡 Install uv using one of these methods:")
+    print("   macOS/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh")
+    print(
+      '   Windows: powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"'
+    )
+    print("   Or via pip: pip install uv")
+    print("   Visit: https://docs.astral.sh/uv/getting-started/installation/")
 
 
 def create_clean_git_history(commit_msg: str) -> None:
@@ -722,18 +761,43 @@ def main() -> None:
 
   except KeyboardInterrupt:
     print("\n❌ Initialization cancelled by user.")
+    print("💡 No changes were made. You can run the script again when ready.")
     sys.exit(1)
   except subprocess.CalledProcessError as e:
-    print(f"❌ Git command failed: {e}")
-    print("💡 Make sure git is installed and you have write permissions.")
+    print("❌ Error: Git command failed")
+    print(f"   Command: {' '.join(e.cmd) if e.cmd else 'unknown'}")
+    print(f"   Exit code: {e.returncode}")
+    if e.stderr:
+      error_output = e.stderr.decode() if isinstance(e.stderr, bytes) else str(e.stderr)
+      print(f"   Error: {error_output}")
+    print()
+    print("💡 Troubleshooting steps:")
+    print("   1. Verify git is installed: git --version")
+    print("   2. Check you have write permissions in this directory")
+    print("   3. Ensure git is configured: git config --global user.name")
+    print("   4. Try running the git command manually to see the full error")
     sys.exit(1)
   except PermissionError as e:
-    print(f"❌ Permission error: {e}")
-    print("💡 Make sure you have write permissions to the current directory.")
+    print("❌ Error: Permission denied")
+    print(f"   Details: {e}")
+    print()
+    print("💡 Troubleshooting steps:")
+    print("   1. Check file/directory permissions: ls -la")
+    print("   2. Ensure you have write access to the current directory")
+    print("   3. On Unix systems, you may need to use: chmod +w .")
+    print("   4. Try running from a different directory with proper permissions")
     sys.exit(1)
   except Exception as e:
-    print(f"❌ Unexpected error during initialization: {e}")
-    print("💡 Please check the error message and try again.")
+    print("❌ Error: Unexpected error during initialization")
+    print(f"   Error type: {type(e).__name__}")
+    print(f"   Details: {e}")
+    print()
+    print("💡 Troubleshooting steps:")
+    print("   1. Check the error message above for clues")
+    print("   2. Verify all required files are present")
+    print("   3. Ensure you have sufficient disk space")
+    print("   4. Try running the script again")
+    print("   5. If the problem persists, check the project's issue tracker")
     sys.exit(1)
 
 
